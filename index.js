@@ -588,11 +588,11 @@ app.post('/api/upload/profilePicture', upload.single("img"), (req, res)=>{
             res.sendStatus(400)
         }
 
-        await User.findByIdAndUpdate(userId_, {profilePic: 'http://localhost:2000/'+filePath}, {new: true})
+        await User.findByIdAndUpdate(userId_, {profilePic: process.env.CURRENT_URL+filePath}, {new: true})
         const posts = await Post.find({postedBy_id: userId_})
     
         posts.forEach(async element=>{
-            await Post.findByIdAndUpdate(element._id, {postedBy_profilePic: 'http://localhost:2000/'+filePath}, {new: true})
+            await Post.findByIdAndUpdate(element._id, {postedBy_profilePic: process.env.CURRENT_URL+filePath}, {new: true})
         })
 
         res.sendStatus(200)
