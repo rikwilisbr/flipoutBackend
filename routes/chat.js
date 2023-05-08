@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Chat = require('../schemas/chatSchema')
 const Message = require('../schemas/messageSchema')
+const Notification = require('../schemas/notificationSchema')
 
 router.post('/', (req, res)=>{
     const usersId = req.body.usersId
@@ -113,8 +114,18 @@ router.put('/change/lastestMessage/:id', (req,res)=>{
 })
 
 
+function messageInsertNotification(chat, message){
+    chat.usersId.forEach(element =>{
+        if(element !== message.senderId){
+            Notification.insertNotification(element, message.senderId, 'message', message.chat)
+        } else {
+            return
+        }
+        
+    })
+}
 
-router.post('/messages',(req,res)=>{
+router.post('/messages', async(req,res)=>{
     const content = req.body.content
     const chatId = req.body.chatId
     const userId = req.headers['user-id']
@@ -135,6 +146,8 @@ router.post('/messages',(req,res)=>{
             chat: chatId,
         }
 
+        const chat = await Chat.findById(chatId)
+        messageInsertNotification(chat, messageData)
         Message.create(messageData).then((response)=>{res.status(201).send(response)})
     }
 })

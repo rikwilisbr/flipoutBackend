@@ -165,7 +165,9 @@ app.put('/api/post/like', (req, res)=>{
                  
                 }
             } else{
-                await Notification.insertNotification(result.postedBy_id, userId_, 'like', myLike)
+                if (result.postedBy_id !== userId_){
+                    await Notification.insertNotification(result.postedBy_id, userId_, 'liked', myLike)
+                }
                 const prev = result.likes
                 result.likes = [...prev, userId_ ]
                 const len = result.likes.length
@@ -282,7 +284,9 @@ app.post('/api/post/repost', async (req, res)=>{
         newRepost.sharedby = user.username
         const savedRepost = await Post.create(newRepost);
         savedRepost.save().then(async (result) =>{
-            await Notification.insertNotification(result.postedBy.id, userId_, 'repost', result._id)
+            if (result.postedBy.id !== userId_){
+                await Notification.insertNotification(result.postedBy.id, userId_, 'reposted', result._id)
+            }
             res.send('added')
         })
     }
@@ -320,7 +324,9 @@ app.post('/api/reply', (req, res)=>{
     console.log(req.body.replyToUserId)
 
     Post.create(replyData).then( async (newPost) =>{
-        await Notification.insertNotification(replyData.replyToUserId, replyData.postedBy_id, 'reply', replyData.replyTo)
+        if(replyData.replyToUserId !== replyData.postedBy_id){
+            await Notification.insertNotification(replyData.replyToUserId, replyData.postedBy_id, 'replied', replyData.replyTo)
+        }
         res.status(200).send(newPost)
     })
 })
@@ -464,7 +470,7 @@ app.put('/api/following/profile/:username/:id/:targetId', async(req, res)=>{
                 }
                 
             } else {
-                await Notification.insertNotification(targetId, userId_, 'follow', userId_)
+                await Notification.insertNotification(targetId, userId_, 'followed', userId_)
                 const prev = result.following
                 result.following = [...prev, targetId]
                 result.save().then(res.send('following'))
@@ -636,7 +642,7 @@ app.get('/api/search/posts/', (req, res)=>{
 })
 
 app.get('/api/search/users/', (req, res)=>{
-    User.find({username: {$regex: req.query.username,$options: 'i' } }, (err, result)=>{
+    User.find({username: {$regex: req.query.username, $options: 'i' } }, (err, result)=>{
         if (err){
             console.log(err)
         } else{
@@ -657,7 +663,7 @@ app.get('/api/search/users/', (req, res)=>{
     })
 })
 
-//notifications
+
 
 
 
@@ -666,6 +672,8 @@ app.use('/login', require('./routes/login'))
 app.use('/isAuth', require('./routes/isAuth'))
 app.use('/register', require('./routes/register'))
 app.use('/api/chat', require('./routes/chat'))
+app.use('/api/notifications', require('./routes/notifications'))
+app.use('/api/suggestUsers', require('./routes/suggestUsers'))
 
 //socket
 

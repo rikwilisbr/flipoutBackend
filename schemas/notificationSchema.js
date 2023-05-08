@@ -4,9 +4,9 @@ const NotificationSchema = new mongoose.Schema({
     userTo: {type: mongoose.Schema.Types.ObjectId, ref:'User'},
     userFrom:{type: mongoose.Schema.Types.ObjectId, ref:'User'},
     notificationsType:{type: String},
-    opened:{type: Boolean, default: false},
+    opened:{type: Boolean, default: true},
     entityId: mongoose.Schema.Types.ObjectId, 
-},{collection: 'notifications', timestamps: true})
+},{collection: 'notifications', timestamps: false})
 
 NotificationSchema.statics.insertNotification = async (userTo, userFrom, notificationsType, entityId) => {
     const data = {
