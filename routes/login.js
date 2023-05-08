@@ -18,7 +18,7 @@ router.post('/', (req, res)=>{
             bcrypt.compare(password, foundUser.password, function(err, result){
                     if(result === true){
                         const id = foundUser.id
-                        const token = jwt.sign({id}, "jwtSecret")
+                        const token = jwt.sign({id}, process.env.JWT_SECRET)
 
                         res.json({
                             login: true,

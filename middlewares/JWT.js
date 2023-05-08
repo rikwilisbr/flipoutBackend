@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken')
+require('dotenv').config()
 
 const middlewareJWT = (req, res, next) => {
     const token = req.headers['x-access-token']
@@ -10,7 +11,7 @@ const middlewareJWT = (req, res, next) => {
             error: 'No token found'
         })
     } else {
-        jwt.verify(token, "jwtSecret", (err, decoded)=>{
+        jwt.verify(token, process.env.JWT_SECRET, (err, decoded)=>{
             if(err){
                 res.json({
                     auth: false,

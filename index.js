@@ -9,6 +9,7 @@ const app = express()
 const path = require('path')
 const fs = require('fs')
 const {Server} = require('socket.io')
+require('dotenv').config()
 
 //Schemas
 const Notification = require('./schemas/notificationSchema')
@@ -42,7 +43,7 @@ app.use(bodyParser.urlencoded({extended: true}))
 
 main().catch(err => console.log(err));
 async function main() {
-    await mongoose.connect('mongodb+srv://tuzhy:c3V4cE5abjgHU2r8@cluster0.oaqpoth.mongodb.net/flipOutDB?retryWrites=true&w=majority');
+    await mongoose.connect(process.env.MONGO_DB_URL);
 }
 
 app.get('/home', (req, res)=>{
