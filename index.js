@@ -619,7 +619,7 @@ app.post('/api/upload/coverPhoto', upload.single("img"), (req, res)=>{
             res.sendStatus(400)
         }
 
-        await User.findByIdAndUpdate(userId_, {coverPhoto: 'http://localhost:2000/'+filePath}, {new: true})
+        await User.findByIdAndUpdate(userId_, {coverPhoto: process.env.CURRENT_URL+filePath}, {new: true})
         
         res.sendStatus(200)
     })
