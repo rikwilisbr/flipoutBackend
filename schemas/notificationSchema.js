@@ -4,7 +4,7 @@ const NotificationSchema = new mongoose.Schema({
     userTo: {type: mongoose.Schema.Types.ObjectId, ref:'User'},
     userFrom:{type: mongoose.Schema.Types.ObjectId, ref:'User'},
     notificationsType:{type: String},
-    opened:{type: Boolean, default: true},
+    opened:{type: Boolean, default: false},
     entityId: mongoose.Schema.Types.ObjectId, 
 },{collection: 'notifications', timestamps: false})
 
