@@ -9,12 +9,24 @@ const app = express()
 const path = require('path')
 const fs = require('fs')
 const {Server} = require('socket.io')
+const AWS = require('aws-sdk')
 require('dotenv').config()
+
+AWS.config.update({region: 'sa-east-1'})
+s3 = new AWS.S3({
+    credentials:{
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    }
+})
+
+app.use(express.static(__dirname));
 
 //Schemas
 const Notification = require('./schemas/notificationSchema')
 const User = require('./schemas/userSchema')
-const Post = require('./schemas/postSchema')
+const Post = require('./schemas/postSchema');
+const { options } = require('./routes/login');
 
 
 const PORT = 2000
@@ -32,13 +44,7 @@ const io = new Server(server, {
 
 const whitelist = [process.env.CLIENT_URL]
 const corsOptions ={
-    origin: (origin, callback)=>{
-        if (whitelist.indexOf(origin) !== -1) {
-            callback(null, true)
-          } else {
-            callback(new Error('Not allowed by CORS'))
-          }
-    }, 
+    origin:"*", 
     credentials:true,            
     optionSuccessStatus:200,
  }
@@ -577,61 +583,66 @@ app.get('/api/followers/data/:username', (req, res)=>{
     })
 })
 
-app.post('/api/upload/profilePicture', upload.single("img"), (req, res)=>{
+app.post('/api/upload/profilePicture', upload.single("img"), async (req, res)=>{
     const userId_ = req.headers['user-id']
 
     if(!req.file){
         console.log('no file found')
-        res.sendStatus(400)
+        return res.sendStatus(400)
     }
     
-    const filePath = 'uploads/images/'+req.file.filename+'.png'
-    const tempPath = req.file.path
-    const targetPath = path.join(__dirname, filePath)
-
-    fs.rename(tempPath, targetPath, async (err)=>{
+    const filestream = fs.createReadStream(req.file.path)
+    const uploadParams = {
+        Bucket: 'flipoutbucket',
+        Key: req.file.filename,
+        Body: filestream,
+        ContentType: req.file.mimetype,
+        ACL: 'public-read'
+    }
+    
+    await s3.upload(uploadParams, async (err, data)=>{
         if(err){
             console.log(err)
-            res.sendStatus(400)
         }
-
-        await User.findByIdAndUpdate(userId_, {profilePic: process.env.CURRENT_URL+filePath}, {new: true})
+        
+        await User.findByIdAndUpdate(userId_, {profilePic: data.Location}, {new: true})
         const posts = await Post.find({postedBy_id: userId_})
     
         posts.forEach(async element=>{
-            await Post.findByIdAndUpdate(element._id, {postedBy_profilePic: process.env.CURRENT_URL+filePath}, {new: true})
+        await Post.findByIdAndUpdate(element._id, {postedBy_profilePic: data.Location}, {new: true})
         })
-
-        res.sendStatus(200)
     })
 
+    res.sendStatus(200)
     
 })
 
-app.post('/api/upload/coverPhoto', upload.single("img"), (req, res)=>{
+app.post('/api/upload/coverPhoto', upload.single("img"), async (req, res)=>{
     const userId_ = req.headers['user-id']
 
     if(!req.file){
         console.log('no file found')
         res.sendStatus(400)
     }
-    
-    const filePath = 'uploads/images/'+req.file.filename+'.png'
-    const tempPath = req.file.path
-    const targetPath = path.join(__dirname, filePath)
 
-    fs.rename(tempPath, targetPath, async (err)=>{
+    const filestream = fs.createReadStream(req.file.path)
+    const uploadParams = {
+        Bucket: 'flipoutbucket',
+        Key: req.file.filename,
+        Body: filestream,
+        ContentType: req.file.mimetype,
+        ACL: 'public-read'
+    }
+    
+    await s3.upload(uploadParams, async (err, data)=>{
         if(err){
             console.log(err)
-            res.sendStatus(400)
         }
 
-        await User.findByIdAndUpdate(userId_, {coverPhoto: process.env.CURRENT_URL+filePath}, {new: true})
-        
-        res.sendStatus(200)
+        await User.findByIdAndUpdate(userId_, {coverPhoto: data.Location}, {new: true})
     })
-
-    
+        
+    res.sendStatus(200)
 })
 
 app.get('/uploads/images/:path', (req, res)=>{
