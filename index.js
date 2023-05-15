@@ -42,20 +42,21 @@ const io = new Server(server, {
     pingTimeout: 60000
 })
 
-const whitelist = [process.env.CLIENT_URL]
-const corsOptions ={
-    origin:(origin, callback)=>{
-        if (whitelist.indexOf(origin) !== -1) {
-            callback(null, true)
-          } else {
-            callback(new Error('Not allowed by CORS'))
-          }
-    }, 
-    credentials:true,            
-    optionSuccessStatus:200,
- }
-
-app.use(cors(corsOptions)) 
+const corsOptions = {
+    origin: (origin, callback) => {
+      const whitelist = [process.env.CLIENT_URL];
+      if (whitelist.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    optionSuccessStatus: 200
+  };
+  
+  app.use(cors(corsOptions));
+  
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}))
