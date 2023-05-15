@@ -688,6 +688,17 @@ app.get('/api/search/users/', (req, res)=>{
     })
 })
 
+app.put('/api/update/user/:userId',(req, res)=>{
+    const userId = req.params['userId']
+    User.findByIdAndUpdate(userId, {firstname: req.body.firstname, lastname: req.body.lastname}, (err, result)=>{
+        if(err){
+            console.log(err)
+        } else if(result){
+            res.status(200).send('okay')
+        }
+    })
+})
+
 
 
 
