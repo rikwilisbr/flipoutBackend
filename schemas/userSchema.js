@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
     username: {type: String, required: true, trim: true, unique: true},
     email: {type: String, required: true, trim: true, unique: true},
     password: {type: String, required: true},
-    profilePic: {type: String, default:"https://i.imgur.com/vZjMgiW.jpg"},
+    profilePic: {type: String, default:"https://i.imgur.com/YaLEPb0.jpg"},
     coverPhoto: {type: String},
     likes: [{type: mongoose.Schema.Types.ObjectId, ref: 'Post'}],
     rePosts:[{type: mongoose.Schema.Types.ObjectId, ref: 'Post'}],
