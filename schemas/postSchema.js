@@ -15,6 +15,7 @@ const PostSchema = new mongoose.Schema({
     replyTo:{type: mongoose.Schema.Types.ObjectId, ref: 'Post'},
     replyToUserId:{type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     sharedby: String,
+    originalPost:{type: mongoose.Schema.Types.ObjectId, ref: 'Post'}
 
 
 }, {timestamps: true, collection: 'posts'} )

@@ -119,10 +119,15 @@ app.post('/api/post', (req, res)=>{
         postedBy_id: userId_,
         postedBy_profilePic: req.body.postedBy.profilePic,
         postedBy: req.body.postedBy,
-        postedBy_username: req.body.postedBy.username
+        postedBy_username: req.body.postedBy.username,
     }
 
-    Post.create(postData).then(newPost =>{
+    Post.create(postData)
+    .then(result => {
+        result.originalPost = result._id  
+        return result.save();
+    })
+    .then(newPost =>{
         res.status(201).send(newPost)
     }).catch(error =>{
         res.status(400).send(error)
@@ -705,15 +710,31 @@ app.get('/api/search/users/', (req, res)=>{
     })
 })
 
-app.put('/api/update/user/:userId',(req, res)=>{
+app.put('/api/update/user/:userId', async (req, res)=>{
     const userId = req.params['userId']
-    User.findByIdAndUpdate(userId, {firstname: req.body.firstname, lastname: req.body.lastname}, (err, result)=>{
-        if(err){
-            console.log(err)
-        } else if(result){
-            res.status(200).send('okay')
-        }
-    })
+    await User.findByIdAndUpdate(userId, {firstname: req.body.firstname, lastname: req.body.lastname})
+
+    const posts = await Post.find({
+        $or: [
+          { postedBy_id: userId },
+          { 'postedBy.id': userId }
+        ]
+      });
+
+    for (const element of posts) {
+    await Post.findByIdAndUpdate(
+        element._id,
+        {
+        $set: {
+            'postedBy.firstname': req.body.firstname,
+            'postedBy.lastname': req.body.lastname,
+        },
+        },
+        { new: true }
+    );
+    }
+
+    res.status(200).send('okay')
 })
 
 app.post('/api/recovery/send_email', async (req, res)=>{
