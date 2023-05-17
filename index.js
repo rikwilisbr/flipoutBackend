@@ -10,7 +10,10 @@ const path = require('path')
 const fs = require('fs')
 const {Server} = require('socket.io')
 const AWS = require('aws-sdk')
+const nodemailer = require('nodemailer')
+const SMTP_CONFIG = require('./config/smtp')
 require('dotenv').config()
+
 
 AWS.config.update({region: 'sa-east-1'})
 s3 = new AWS.S3({
@@ -19,6 +22,20 @@ s3 = new AWS.S3({
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
     }
 })
+
+const transporter = nodemailer.createTransport({
+    host: SMTP_CONFIG.host,
+    port:  SMTP_CONFIG.port,
+    secure:  false,
+    auth:{
+        user:  SMTP_CONFIG.user,
+        pass:  SMTP_CONFIG.pass
+    },
+    tls:{
+        rejectUnauthorized: false
+    }
+})
+
 
 app.use(express.static(__dirname));
 
@@ -44,13 +61,13 @@ const io = new Server(server, {
 
 const whitelist = [process.env.CLIENT_URL]
 const corsOptions ={
-    origin:(origin, callback)=>{
+    origin: (origin, callback)=>{
         if (whitelist.indexOf(origin) !== -1) {
             callback(null, true)
           } else {
             callback(new Error('Not allowed by CORS'))
           }
-    }, 
+        },
     credentials:true,            
     optionSuccessStatus:200,
  }
@@ -87,7 +104,7 @@ app.get('/home', (req, res)=>{
 
             })
         } else {
-            console.log('user not found')
+            return
         }
     })
 })
@@ -699,9 +716,26 @@ app.put('/api/update/user/:userId',(req, res)=>{
     })
 })
 
+app.post('/api/recovery/send_email', async (req, res)=>{
+    const email = req.body.email
+    const otp = req.body.otp
+    
+    const userFound = await User.findOne({email: email})
 
+    if(userFound){
+        await transporter.sendMail({
+            from: 'FlipOut <flipoutsocialnetwork@gmail.com>', // sender address
+            to: email, // list of receivers
+            subject: 'FlipOut password recovery system', // Subject line
+            html: "<h1>Your recovery code is:</h2>"+ '<h1>'+otp+'</h1>', // html body
+          });
 
+        res.send({sended: true, error: ''})
 
+    } else {
+        res.send({sended: false, error: 'email not found'})
+    } 
+})
 
 //routes
 app.use('/login', require('./routes/login'))

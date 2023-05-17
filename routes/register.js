@@ -36,4 +36,20 @@ router.post('/', (req, res)=>{
     
  })
 
+ router.post('/change_password', (req, res)=>{
+    bcrypt.hash(req.body.password, 10, (err, hash)=>{
+        User.findOneAndUpdate({email: req.body.email}, {password: hash}, (err, result)=>{
+            if(err){
+                console.log(err)
+                res.send({error:'something went wrong'})
+            } else if(result){
+                res.send({
+                    changed: true
+                })
+            }
+        })
+    })
+    
+ })
+
  module.exports = router
