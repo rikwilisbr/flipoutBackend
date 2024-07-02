@@ -26,7 +26,7 @@ const io = new Server(server, {
 
 
 //cors usage and configs
-const whitelist = [process.env.CLIENT_URL]
+const whitelist = [process.env.CLIENT_URL, process.env.CURRENT_URL]
 const corsOptions ={
     origin: (origin, callback)=>{
         if (whitelist.indexOf(origin) !== -1) {
@@ -91,6 +91,7 @@ io.on('connection', (socket)=>{
         socket.in(chat.chatId).emit('received', chat.message)
     })
 })
+
 
 
 
